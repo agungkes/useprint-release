@@ -1,0 +1,22 @@
+# Runs in the public agungkes/useprint-release repository. Deletes the logs of successful CI
+# runs; failed runs keep their logs so the failure can be diagnosed.
+name: Delete successful CI logs
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  actions: write
+
+jobs:
+  delete-logs:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          REPOSITORY: ${{ github.repository }}
+        run: gh api -X DELETE "repos/$REPOSITORY/actions/runs/$RUN_ID/logs" > /dev/null
